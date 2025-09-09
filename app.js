@@ -3,7 +3,7 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 
-const app = express();
+app.use(cors({ origin: 'http://localhost:3000' }));
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'sensitivities.json');
 
