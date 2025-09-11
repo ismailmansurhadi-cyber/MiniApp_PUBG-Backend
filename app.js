@@ -17,7 +17,7 @@ async function readData() {
         return JSON.parse(data);
     } catch (error) {
         console.error('Failed to read data file:', error);
-        return [];
+        return { pro: [], beginner: [] }; // إعادة كائن فارغ بدلاً من مصفوفة فارغة
     }
 }
 
