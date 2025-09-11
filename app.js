@@ -3,12 +3,11 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(express.json());
+app.use(cors());
+
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'sensitivities.json');
-
-app.use(cors());
-app.use(express.json());
 
 // دالة لقراءة البيانات من ملف JSON
 async function readData() {
