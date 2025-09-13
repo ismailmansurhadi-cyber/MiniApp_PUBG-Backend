@@ -1,33 +1,27 @@
 const express = require('express');
 const cors = require('cors');
 const firebaseAdmin = require('firebase-admin');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
-// قم بتفعيل CORS للسماح للواجهة الأمامية بالاتصال
 app.use(cors({ origin: 'https://mini-app-frontend-gamma.vercel.app' }));
 
-// Firebase Service Account from Vercel Environment Variables
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
 
-// Initializing Firebase Admin
 if (FIREBASE_SERVICE_ACCOUNT && !firebaseAdmin.apps.length) {
     try {
         const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
         firebaseAdmin.initializeApp({
             credential: firebaseAdmin.credential.cert(serviceAccount)
         });
-        console.log('Firebase initialized successfully.');
     } catch (e) {
         console.error('Failed to parse or initialize Firebase:', e);
     }
 }
 const db = firebaseAdmin.firestore();
-
-// --- API Routes for Sensitivities Management ---
 
 // Route to get all sensitivities from Firestore
 app.get('/api/sensitivities', async (req, res) => {
@@ -81,7 +75,6 @@ app.delete('/api/sensitivities/:id', async (req, res) => {
     }
 });
 
-// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
