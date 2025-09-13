@@ -1,7 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const axios = require('axios');
-const path = require('path');
 const firebaseAdmin = require('firebase-admin');
 
 const app = express();
@@ -9,11 +7,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-// Enable CORS for the frontend domain
+// قم بتفعيل CORS للسماح للواجهة الأمامية بالاتصال
 app.use(cors({ origin: 'https://mini-app-frontend-gamma.vercel.app' }));
 
-// PUBG API Key from Vercel Environment Variables
-const PUBG_API_KEY = process.env.PUBG_API_KEY;
 // Firebase Service Account from Vercel Environment Variables
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
 
@@ -31,66 +27,9 @@ if (FIREBASE_SERVICE_ACCOUNT && !firebaseAdmin.apps.length) {
 }
 const db = firebaseAdmin.firestore();
 
-// Serve static files from the frontend build directory
-app.use(express.static(path.join(__dirname, 'frontend/build')));
-
-// --- API Routes for PUBG Stats ---
-
-// Route to get PUBG player stats
-app.post('/api/get-stats', async (req, res) => {
-    try {
-        const { playerID } = req.body;
-
-        if (!PUBG_API_KEY) {
-            return res.status(500).json({ error: 'PUBG API key not configured.' });
-        }
-        
-        // List of common PUBG Mobile shards
-        const mobileShards = ['mobile-eu', 'mobile-na', 'mobile-krjp', 'mobile-sa', 'mobile-sea'];
-        let playerData = null;
-
-        // Loop to search for the player across each shard
-        for (const shard of mobileShards) {
-            try {
-                const response = await axios.get(`https://api.pubg.com/shards/${shard}/players?filter[playerNames]=${playerID}`, {
-                    headers: {
-                        'Authorization': `Bearer ${PUBG_API_KEY}`,
-                        'Accept': 'application/vnd.api+json'
-                    }
-                });
-                
-                if (response.data.data.length > 0) {
-                    playerData = response.data.data[0];
-                    break; // Player found, exit the loop
-                }
-            } catch (error) {
-                // Ignore errors from specific shards and continue to the next one
-                console.error(`Error with shard ${shard}:`, error.message);
-                continue;
-            }
-        }
-
-        if (!playerData) {
-            return res.status(404).json({ error: 'Player not found on any shard.' });
-        }
-
-        const playerStats = playerData.attributes.stats;
-
-        res.json({
-            playerName: playerData.attributes.name,
-            kdRatio: playerStats.kd.value,
-            winRate: playerStats.wins.value,
-        });
-
-    } catch (error) {
-        console.error('Error fetching PUBG stats:', error.message);
-        res.status(500).json({ error: 'Failed to fetch player stats.' });
-    }
-});
-
 // --- API Routes for Sensitivities Management ---
 
-// Route to get all sensitivities
+// Route to get all sensitivities from Firestore
 app.get('/api/sensitivities', async (req, res) => {
     try {
         const snapshot = await db.collection('sensitivities').get();
