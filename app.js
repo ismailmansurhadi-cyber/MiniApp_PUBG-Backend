@@ -18,7 +18,7 @@ admin.initializeApp({
 const db = admin.firestore();
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: 'https://mini-app-frontend-gamma.vercel.app' }));
 
 const PORT = process.env.PORT || 3000;
 
