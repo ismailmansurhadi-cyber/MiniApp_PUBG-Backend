@@ -1,16 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const firebaseAdmin = require('firebase-admin');
-const path = require('path');
+const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
-app.use(cors({ origin: 'https://mini-app-frontend-gamma.vercel.app' }));
+// استخدام متغير البيئة لرابط الواجهة الأمامية
+app.use(cors({ origin: process.env.WEBAPP_URL }));
 
+// -------- Firebase --------
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
-
 if (FIREBASE_SERVICE_ACCOUNT && !firebaseAdmin.apps.length) {
     try {
         const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
@@ -23,7 +23,7 @@ if (FIREBASE_SERVICE_ACCOUNT && !firebaseAdmin.apps.length) {
 }
 const db = firebaseAdmin.firestore();
 
-// Route to get all sensitivities from Firestore
+// -------- API Routes --------
 app.get('/api/sensitivities', async (req, res) => {
     try {
         const snapshot = await db.collection('sensitivities').get();
@@ -75,31 +75,44 @@ app.delete('/api/sensitivities/:id', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
 // -------- Telegram Bot --------
 const token = process.env.TELEGRAM_TOKEN;
 const webAppUrl = process.env.WEBAPP_URL;
-const bot = new TelegramBot(token); // بدون polling
+const bot = new TelegramBot(token);
 
 // نقطة استقبال تحديثات تيليجرام
 app.post(`/webhook/${token}`, (req, res) => {
-  bot.processUpdate(req.body);
-  res.sendStatus(200);
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
 });
 
 // رسالة الترحيب التي تظهر الزر
 bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-  bot.sendMessage(chatId, '👋 أهلاً بك! اضغط الزر أدناه لفتح التطبيق:', {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: '🚀 فتح التطبيق', web_app: { url: webAppUrl } }]
-      ]
-    }
-  });
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, '👋 أهلاً بك! اضغط الزر أدناه لفتح التطبيق:', {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: '🚀 فتح التطبيق', web_app: { url: webAppUrl } }]
+            ]
+        }
+    });
 });
 
-// هذا الكود يضمن تشغيل الخادم
+// -------- ضبط Webhook تلقائياً --------
+const setWebhook = async () => {
+    try {
+        const vercelUrl = process.env.VERCEL_URL;
+        if (!vercelUrl) return console.warn('VERCEL_URL not defined');
+        const webhookUrl = `https://${vercelUrl}/webhook/${token}`;
+        const res = await axios.get(`https://api.telegram.org/bot${token}/setWebhook?url=${webhookUrl}`);
+        console.log('Webhook set result:', res.data);
+    } catch (err) {
+        console.error('Failed to set webhook:', err.message);
+    }
+};
+
+// نفعل Webhook عند بدء السيرفر
+setWebhook();
+
+// -------- Export for Vercel --------
 module.exports = app;
