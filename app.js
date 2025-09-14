@@ -4,6 +4,9 @@ const firebaseAdmin = require('firebase-admin');
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
+// استيراد router صندوق الغنائم
+const lootboxRouter = require('./lootbox');
+
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: process.env.WEBAPP_URL }));
@@ -70,15 +73,32 @@ app.delete('/api/sensitivities/:id', async (req, res) => {
         res.status(500).send('An error occurred while deleting sensitivity.');
     }
 });
-// استيراد واستخدام router الخاص بصندوق الغنائم
-const lootboxRouter = require('./lootbox');
+
+// ربط router صندوق الغنائم بالواجهة الخلفية
 app.use('/api', lootboxRouter);
 
 // -------- Telegram Bot --------
 const token = process.env.TELEGRAM_TOKEN;
-console.log('My bot token is:', token);
-const webAppUrl = process.env.WEBAPP_URL;
-const bot = new TelegramBot(token);
+const webAppUrl = `${process.env.WEBAPP_URL}/performance.html`;
+const publicUrl = process.env.PUBLIC_URL;
+
+const bot = new TelegramBot(token, { polling: false });
+
+// تعريف الدالة قبل استدعائها
+const setWebhook = async () => {
+    try {
+        if (!publicUrl) return console.error('PUBLIC_URL is not defined!');
+        
+        const webhookUrl = `${publicUrl}/webhook/${token}`;
+        const res = await axios.get(`https://api.telegram.org/bot${token}/setWebhook?url=${webhookUrl}`);
+        console.log('Webhook set result:', res.data);
+    } catch (err) {
+        console.error('Failed to set webhook:', err.message);
+    }
+};
+
+// استدعاء الدالة
+setWebhook();
 
 app.post(`/webhook/${token}`, (req, res) => {
     bot.processUpdate(req.body);
@@ -95,21 +115,6 @@ bot.onText(/\/start/, (msg) => {
         }
     });
 });
-
-const setWebhook = async () => {
-    try {
-        const publicUrl = process.env.PUBLIC_URL;
-        if (!publicUrl) return console.error('PUBLIC_URL is not defined!');
-        
-        const webhookUrl = `${publicUrl}/webhook/${token}`;
-        const res = await axios.get(`https://api.telegram.org/bot${token}/setWebhook?url=${webhookUrl}`);
-        console.log('Webhook set result:', res.data);
-    } catch (err) {
-        console.error('Failed to set webhook:', err.message);
-    }
-};
-
-setWebhook();
 
 // -------- Export for Vercel --------
 module.exports = app;
