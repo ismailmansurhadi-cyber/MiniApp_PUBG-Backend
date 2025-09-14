@@ -2,7 +2,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 // قم باستبدال الرمز المميز (توكن) الخاص بالبوت
-const token = '8106225305:AAFIq9TuL1S_jl_LlFz34J0xn-WWBCQd7bE';
+const token = '7960668018:AAE_JWvkhgn4jr20KREB8NUdBdix7yiGNtQ';
 
 // قم بإنشاء كائن البوت
 const bot = new TelegramBot(token, { polling: true });
