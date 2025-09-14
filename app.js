@@ -2,12 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const firebaseAdmin = require('firebase-admin');
 const path = require('path');
+const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(cors({ origin: 'https://mini-app-frontend-gamma.vercel.app' }));
+app.use(cors({ origin: process.env.WEBAPP_URL }));
 
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
 
@@ -75,6 +76,37 @@ app.delete('/api/sensitivities/:id', async (req, res) => {
     }
 });
 
+// تشغيل الخادم
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+});
+
+// -----------------------------------------------------------------------------------
+// هذا هو كود البوت الذي تم دمجه مع كود الخادم
+// -----------------------------------------------------------------------------------
+
+// استخدم متغيرات البيئة بدلاً من التوكن والرابط المباشر
+const token = process.env.TELEGRAM_TOKEN;
+const webAppUrl = process.env.WEBAPP_URL;
+
+// قم بإنشاء كائن البوت
+const bot = new TelegramBot(token, { polling: true });
+
+// هذا الكود يستمع لأمر /start
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+
+  // إرسال رسالة ترحيب مع زر "فتح التطبيق"
+  bot.sendMessage(chatId, 'أهلاً بك! انقر على الزر أدناه لفتح التطبيق:', {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: 'فتح التطبيق',
+            web_app: { url: webAppUrl }
+          }
+        ]
+      ]
+    }
+  });
 });
