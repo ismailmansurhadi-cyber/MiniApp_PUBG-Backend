@@ -95,9 +95,10 @@ bot.onText(/\/start/, (msg) => {
 
 const setWebhook = async () => {
     try {
-        const vercelUrl = process.env.VERCEL_URL;
-        if (!vercelUrl) return console.warn('VERCEL_URL not defined');
-        const webhookUrl = `https://${vercelUrl}/webhook/${token}`;
+        const publicUrl = process.env.PUBLIC_URL;
+        if (!publicUrl) return console.error('PUBLIC_URL is not defined!');
+        
+        const webhookUrl = `${publicUrl}/webhook/${token}`;
         const res = await axios.get(`https://api.telegram.org/bot${token}/setWebhook?url=${webhookUrl}`);
         console.log('Webhook set result:', res.data);
     } catch (err) {
