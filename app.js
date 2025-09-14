@@ -1,20 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const firebaseAdmin = require('firebase-admin');
-const TelegramBot = require('node-telegram-bot-api');
-const axios = require('axios');
+const path = require('path');
 
 const app = express();
-app.use(express.json());
-app.use(cors({ origin: process.env.WEBAPP_URL }));
+const PORT = process.env.PORT || 3000;
 
-// -------- Firebase --------
+app.use(express.json());
+app.use(cors({ origin: 'https://mini-app-frontend-gamma.vercel.app' }));
+
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
+
 if (FIREBASE_SERVICE_ACCOUNT && !firebaseAdmin.apps.length) {
     try {
         const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
         firebaseAdmin.initializeApp({
-            credential: firebaseAdmin.credential.cert(serviceAccount),
+            credential: firebaseAdmin.credential.cert(serviceAccount)
         });
     } catch (e) {
         console.error('Failed to parse or initialize Firebase:', e);
@@ -22,56 +23,58 @@ if (FIREBASE_SERVICE_ACCOUNT && !firebaseAdmin.apps.length) {
 }
 const db = firebaseAdmin.firestore();
 
-// -------- API Routes --------
+// Route to get all sensitivities from Firestore
 app.get('/api/sensitivities', async (req, res) => {
     try {
         const snapshot = await db.collection('sensitivities').get();
         const sensitivities = [];
-        snapshot.forEach(doc => sensitivities.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(doc => {
+            sensitivities.push({ id: doc.id, ...doc.data() });
+        });
         res.json(sensitivities);
     } catch (error) {
-        res.status(500).send('Error fetching sensitivities.');
+        console.error('Error fetching sensitivities:', error);
+        res.status(500).send('An error occurred while fetching sensitivities.');
     }
 });
 
-// -------- Telegram Bot --------
-const token = process.env.TELEGRAM_TOKEN;
-const webAppUrl = process.env.WEBAPP_URL;
-const bot = new TelegramBot(token);
-
-// -------- Webhook route --------
-app.post(`/webhook/${token}`, (req, res) => {
-    bot.processUpdate(req.body);
-    res.sendStatus(200);
-});
-
-// -------- رسالة الترحيب --------
-bot.onText(/\/start/, (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, '👋 أهلاً بك! اضغط الزر أدناه لفتح التطبيق:', {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '🚀 فتح التطبيق', web_app: { url: webAppUrl } }]
-            ]
-        }
-    });
-});
-
-// -------- ضبط Webhook تلقائياً --------
-const setWebhook = async () => {
+// Route to add a new sensitivity record
+app.post('/api/sensitivities', async (req, res) => {
     try {
-        const vercelUrl = process.env.VERCEL_URL;
-        if (!vercelUrl) return console.warn('VERCEL_URL not defined');
-        const webhookUrl = `https://${vercelUrl}/webhook/${token}`;
-        const res = await axios.get(`https://api.telegram.org/bot${token}/setWebhook?url=${webhookUrl}`);
-        console.log('Webhook set result:', res.data);
-    } catch (err) {
-        console.error('Failed to set webhook:', err.message);
+        const newSensitivity = req.body;
+        const docRef = await db.collection('sensitivities').add(newSensitivity);
+        res.status(201).json({ id: docRef.id, ...newSensitivity });
+    } catch (error) {
+        console.error('Error adding sensitivity:', error);
+        res.status(500).send('An error occurred while adding sensitivity.');
     }
-};
+});
 
-// نفعل Webhook عند بدء السيرفر
-setWebhook();
+// Route to update a sensitivity record
+app.put('/api/sensitivities/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedSensitivity = req.body;
+        await db.collection('sensitivities').doc(id).update(updatedSensitivity);
+        res.status(200).json({ message: 'Sensitivity updated successfully.' });
+    } catch (error) {
+        console.error('Error updating sensitivity:', error);
+        res.status(500).send('An error occurred while updating sensitivity.');
+    }
+});
 
-// -------- Export for Vercel --------
-module.exports = app;
+// Route to delete a sensitivity record
+app.delete('/api/sensitivities/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.collection('sensitivities').doc(id).delete();
+        res.status(200).json({ message: 'Sensitivity deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting sensitivity:', error);
+        res.status(500).send('An error occurred while deleting sensitivity.');
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
