@@ -6,7 +6,6 @@ const axios = require('axios');
 
 const app = express();
 app.use(express.json());
-// استخدام متغير البيئة لرابط الواجهة الأمامية
 app.use(cors({ origin: process.env.WEBAPP_URL }));
 
 // -------- Firebase --------
@@ -38,7 +37,6 @@ app.get('/api/sensitivities', async (req, res) => {
     }
 });
 
-// Route to add a new sensitivity record
 app.post('/api/sensitivities', async (req, res) => {
     try {
         const newSensitivity = req.body;
@@ -50,7 +48,6 @@ app.post('/api/sensitivities', async (req, res) => {
     }
 });
 
-// Route to update a sensitivity record
 app.put('/api/sensitivities/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -63,7 +60,6 @@ app.put('/api/sensitivities/:id', async (req, res) => {
     }
 });
 
-// Route to delete a sensitivity record
 app.delete('/api/sensitivities/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -80,13 +76,11 @@ const token = process.env.TELEGRAM_TOKEN;
 const webAppUrl = process.env.WEBAPP_URL;
 const bot = new TelegramBot(token);
 
-// نقطة استقبال تحديثات تيليجرام
 app.post(`/webhook/${token}`, (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
 });
 
-// رسالة الترحيب التي تظهر الزر
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, '👋 أهلاً بك! اضغط الزر أدناه لفتح التطبيق:', {
@@ -98,7 +92,6 @@ bot.onText(/\/start/, (msg) => {
     });
 });
 
-// -------- ضبط Webhook تلقائياً --------
 const setWebhook = async () => {
     try {
         const vercelUrl = process.env.VERCEL_URL;
@@ -111,7 +104,6 @@ const setWebhook = async () => {
     }
 };
 
-// نفعل Webhook عند بدء السيرفر
 setWebhook();
 
 // -------- Export for Vercel --------
