@@ -79,7 +79,7 @@ app.use('/api', lootboxRouter);
 
 // -------- Telegram Bot --------
 const token = process.env.TELEGRAM_TOKEN;
-const webAppUrl = `${process.env.WEBAPP_URL}/performance.html`;
+const webAppUrl = `${process.env.WEBAPP_URL}/`;
 const publicUrl = process.env.PUBLIC_URL;
 
 const bot = new TelegramBot(token, { polling: false });
