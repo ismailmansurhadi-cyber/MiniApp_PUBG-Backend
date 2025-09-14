@@ -78,3 +78,28 @@ app.delete('/api/sensitivities/:id', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+// -------- Telegram Bot --------
+const token = process.env.TELEGRAM_TOKEN;
+const webAppUrl = process.env.WEBAPP_URL;
+const bot = new TelegramBot(token); // بدون polling
+
+// نقطة استقبال تحديثات تيليجرام
+app.post(`/webhook/${token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// رسالة الترحيب التي تظهر الزر
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, '👋 أهلاً بك! اضغط الزر أدناه لفتح التطبيق:', {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🚀 فتح التطبيق', web_app: { url: webAppUrl } }]
+      ]
+    }
+  });
+});
+
+// هذا الكود يضمن تشغيل الخادم
+module.exports = app;
