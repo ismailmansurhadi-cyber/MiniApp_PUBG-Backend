@@ -73,6 +73,7 @@ app.delete('/api/sensitivities/:id', async (req, res) => {
 
 // -------- Telegram Bot --------
 const token = process.env.TELEGRAM_TOKEN;
+console.log('My bot token is:', token);
 const webAppUrl = process.env.WEBAPP_URL;
 const bot = new TelegramBot(token);
 
