@@ -70,6 +70,9 @@ app.delete('/api/sensitivities/:id', async (req, res) => {
         res.status(500).send('An error occurred while deleting sensitivity.');
     }
 });
+// استيراد واستخدام router الخاص بصندوق الغنائم
+const lootboxRouter = require('./lootbox');
+app.use('/api', lootboxRouter);
 
 // -------- Telegram Bot --------
 const token = process.env.TELEGRAM_TOKEN;
