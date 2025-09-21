@@ -26,47 +26,6 @@ if (FIREBASE_SERVICE_ACCOUNT && !firebaseAdmin.apps.length) {
 const db = firebaseAdmin.firestore();
 
 // -------- API Routes --------
-
-// ---------------------------------------------
-// الوظائف الجديدة لحساسية VIP ولوحة التحكم
-// ---------------------------------------------
-
-// مسار لجلب حساسية VIP بشكل منفصل
-app.get('/api/sensitivities/vip', async (req, res) => {
-    try {
-        const docRef = db.collection('sensitivities').doc('vip');
-        const doc = await docRef.get();
-
-        if (!doc.exists) {
-            return res.status(404).json({ message: 'VIP sensitivity not found.' });
-        }
-        res.status(200).json(doc.data());
-    } catch (error) {
-        console.error('Error fetching VIP sensitivity:', error);
-        res.status(500).send('An error occurred while fetching VIP sensitivity.');
-    }
-});
-
-// مسار لتحديث أو إضافة حساسية VIP
-app.put('/api/sensitivities/vip', async (req, res) => {
-    try {
-        const updatedSensitivity = req.body;
-        const vipDocRef = db.collection('sensitivities').doc('vip');
-        
-        // استخدام set مع { merge: true } لإضافة أو تحديث الوثيقة
-        await vipDocRef.set(updatedSensitivity, { merge: true });
-        
-        res.status(200).json({ message: 'VIP sensitivity updated successfully.' });
-    } catch (error) {
-        console.error('Error updating VIP sensitivity:', error);
-        res.status(500).send('An error occurred while updating VIP sensitivity.');
-    }
-});
-
-// ---------------------------------------------
-// الوظائف الأصلية لجلب وإدارة الحساسيات
-// ---------------------------------------------
-
 app.get('/api/sensitivities', async (req, res) => {
     try {
         const snapshot = await db.collection('sensitivities').get();
