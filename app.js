@@ -41,6 +41,9 @@ app.get('/api/sensitivities', async (req, res) => {
 });
 
 app.post('/api/sensitivities', async (req, res) => {
+    // 🔒 حماية: السماح لك فقط بالإضافة
+    if (req.body.userId !== 658500340) return res.status(403).json({ error: 'غير مصرح لك' });
+    
     try {
         const newSensitivity = req.body;
         const docRef = await db.collection('sensitivities').add(newSensitivity);
@@ -52,6 +55,9 @@ app.post('/api/sensitivities', async (req, res) => {
 });
 
 app.put('/api/sensitivities/:id', async (req, res) => {
+    // 🔒 حماية: السماح لك فقط بالتعديل
+    if (req.body.userId !== 658500340) return res.status(403).json({ error: 'غير مصرح لك' });
+    
     try {
         const { id } = req.params;
         const updatedSensitivity = req.body;
@@ -64,6 +70,9 @@ app.put('/api/sensitivities/:id', async (req, res) => {
 });
 
 app.delete('/api/sensitivities/:id', async (req, res) => {
+    // 🔒 حماية: السماح لك فقط بالحذف
+    if (req.body.userId !== 658500340) return res.status(403).json({ error: 'غير مصرح لك' });
+    
     try {
         const { id } = req.params;
         await db.collection('sensitivities').doc(id).delete();
