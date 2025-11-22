@@ -282,16 +282,7 @@ app.post(`/webhook/${token}`, (req, res) => {
     res.sendStatus(200);
 });
 
-bot.onText(/\/start/, (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, '👋 أهلاً بك! اضغط الزر أدناه لفتح التطبيق:', {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '🚀 فتح التطبيق', web_app: { url: webAppUrl } }]
-            ]
-        }
-    });
-});
+// ⚠️ تم حذف bot.onText(/\/start/, ...) بالكامل
 
 // -------- Export for Vercel --------
 module.exports = app;
